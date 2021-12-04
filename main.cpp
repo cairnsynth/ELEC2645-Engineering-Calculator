@@ -5,24 +5,12 @@
 
 //Defining global constants
 #define PI 3.14159265359
-
-//Function declarations
-int print_menu(std::string title, std::list<std::string> items);
-int user_input(int range);
-void start_page();
-void end_page();
-
-void ia_main_menu();
-void ia_supply_voltage_menu();
-void ia_gain_menu();
-void ia_input_z_menu();
-void ia_freq_menu();
-void ia_calculations_main_menu();
-
-float calculate_r2(float gain, float rIn);
-float calculate_c1(float r1, float fMin);
+#define LINELENGTH 40
+#define SCREENHEIGHT 15
 
 //Global variable declarations
+enum Position{LEFT, CENTRE, RIGHT};             //lastchance, 25/06/2019, http://www.cplusplus.com/forum/general/256212/#msg1121565
+
 float g_gain;
 float g_r1;
 float g_r2;
@@ -32,21 +20,63 @@ float g_supplyVoltage;
 float g_minFreq;
 float g_maxFreq;
 
+//Function declarations
+void print_menu(std::string title, std::string body, std::list<std::string> items);
+int user_input(int range);
+void start_page();
+void end_page();
+
+void ia_main_menu();
+void ia_supply_type_menu();
+void ia_supply_voltage_menu();
+void ia_gain_menu();
+void ia_input_z_menu();
+void ia_freq_menu();
+void ia_calculations_main_menu();
+
+float calculate_r2(float gain, float rIn);
+float calculate_c1(float r1, float fMin);
+
+void print(Position pos, std::string s);
+
 //Main loop
 int main() {
     ia_main_menu();
 }
+//Function to handle printing with centre justification, reference: lastchance, 25/06/2019, http://www.cplusplus.com/forum/general/256212/#msg1121565
+void print(Position pos, std::string s) {           
+    int spaces = 0;
+
+    switch (pos) {
+        case CENTRE: 
+            spaces = (LINELENGTH - s.size()) / 2;
+            break;
+        case RIGHT:
+            spaces = LINELENGTH - s.size();
+            break;
+    }
+    if(spaces > 0) {
+        std::cout << std::string(spaces, ' ') << s << std::endl;
+    }
+}
 
 //Function to handle printing of all menus
-int print_menu(std::string title, std::list<std::string> items){
-    std::cout << title << std::endl;                               //Prints menu title
+void print_menu(std::string title, std::string body, std::list<std::string> items) {
+    std::cout << std::string(5, '\n');                              //Prints blank space between screens
+    std::cout << std::string(LINELENGTH, '=') << std::endl;         //Prints menu header
+    print(CENTRE, title);                                         //Prints menu title
+    std::cout << std::string(LINELENGTH, '-') << std::endl;                      //Prints sub header
+    print(CENTRE, body);                                            //Prints body
+
 
     for(std::string item : items) {                                //Loop through all menu items
-        std::cout << item << std::endl;                            //Prints menu item on new line
+        print(CENTRE, item);                                      //Prints menu item on new line
     }
 
-    int input = user_input(int(items.size()));                            //Gets a user input with a range equal to the number of menu items
-    return input;                                                  //Returns users input
+    int remainingLines = (SCREENHEIGHT - 7) - items.size();        // Calculates how many lines are remaining on the screen
+    std::cout << std::string(remainingLines, '\n');                 //Prints a new line for each remaining line
+
+    std::cout << std::string(LINELENGTH, '-') << std::endl;  
 }
 
 //Function to handle user input, takes in the range of options allows
@@ -56,7 +86,7 @@ int user_input(int range) {
     int int_input;              //Int to contain the converted input
 
     while (1) {                         //While loop to repeat until valid input is given
-        std::cout << "USER INPUT:";
+        print(LEFT, "ENTER VALUE:");
         std::cin >> input;              //Gets terminal input
 
         try {                               //Error handling to see if the input string can be converted to an integer
@@ -98,6 +128,7 @@ void end_page() {
 
 //Function to print the main menu for the inverting amplifier calculator
 void ia_main_menu() {
+ /*   
     start_page();
 
     std::cout << "Inverting Op-Amp Calculator\n\n"; 
@@ -116,6 +147,28 @@ void ia_main_menu() {
     }
 
     end_page();
+    ia_supply_voltage_menu();
+*/
+    std::list<std::string> items = {"Luke Coles", "201331120", " ", "Press 1 to continue"};
+    print_menu("Inverting Amplifier Calculator", " ", items);
+    int input = user_input(1);
+
+    switch(input) {
+        case 1: ia_supply_type_menu(); break;
+    }
+
+}
+
+void ia_supply_type_menu() {
+    std::list<std::string> items = {"1. Single Supply", "2. Dual Supply"};
+    print_menu("1. Supply Type", "Choose whether you want to use a:", items);
+    int input = user_input(2);
+
+    switch(input) {
+        case 1: g_isSingleSupply = true; break;
+        case 2: g_isSingleSupply = false; break;
+    }
+
     ia_supply_voltage_menu();
 }
 
