@@ -1,11 +1,12 @@
 //Including classes that I will need to use
 #include <iostream>
+#include <iomanip>
 #include <string>
 #include <list>
-#include <sstream>
 #include <vector>
 #include <map>
 #include <math.h>
+#include <fstream>
 
 //Defining global constants
 #define PI 3.14159265359
@@ -17,8 +18,11 @@ enum Position{LEFT, CENTRE, RIGHT};             //lastchance, 25/06/2019, http:/
 
 float g_gain;
 float g_r1;
+float g_r1Npv;
 float g_r2;
+float g_r2Npv;
 float g_c1;
+float g_c1Npv;
 bool g_isSingleSupply;
 float g_supplyVoltage;
 float g_minFreq;
@@ -41,6 +45,12 @@ void ia_input_z_menu();
 void ia_freq_menu();
 void ia_calculations_main_menu();
 void ia_more_data();
+void ia_detailed_calculations();
+void ia_save_to_text();
+void ia_generate_circuit();
+void ia_generate_wave();
+void ia_compare_opamp();
+void ia_move_on();
 
 float calculate_r2(float gain, float rIn);
 float calculate_c1(float r1, float fMin);
@@ -136,7 +146,7 @@ void ia_main_menu() {
     ia_supply_type_menu();
 
 }
-
+//Function to handle getting supply type data
 void ia_supply_type_menu() {
     std::list<std::string> items = {"1. Single Supply", "2. Dual Supply"};
     print_menu("1. Supply Type", "Choose whether you want to use a:", items);
@@ -149,28 +159,28 @@ void ia_supply_type_menu() {
 
     ia_supply_voltage_menu();
 }
-
+//Function to handle getting supply voltage data
 void ia_supply_voltage_menu() {
     std::list<std::string> items = {"+Vs for single supply", "+Vs and -Vs for dual supply"};
     print_menu("2. Supply Voltage", "Enter your intended supply voltage, in V", items);
     g_supplyVoltage = user_input(-1);
     ia_gain_menu();
 }
-
+//Function to handle getting gain data
 void ia_gain_menu() {
     std::list<std::string> items = {};
     print_menu("3. Gain", "Enter how much gain you would like", items);
     g_gain = user_input(-1);
     ia_input_z_menu();
 }
-
+//Function to handle getting input impedance data
 void ia_input_z_menu() {
     std::list<std::string> items = {};
     print_menu("4. Input Impedance", "Enter the input impedance of your circuit", items);
     g_r1 = user_input(-1);
     ia_freq_menu();
 }
-
+//Function to handle getting minimum and maximum frequencies
 void ia_freq_menu() {
     std::list<std::string> items = {"1. The MINMUM frequency", "2. The MAXIMUM frequency"};
     print_menu("5. Input Signal Frequency", "Signal frequency is important, enter in Hz:", items);
@@ -178,11 +188,15 @@ void ia_freq_menu() {
     g_maxFreq = user_input(-1);
     ia_calculations_main_menu();
 }
-
 //Function to calculate component values and display them
 void ia_calculations_main_menu() {
     g_r2 = calculate_r2(g_gain, g_r1);
     g_c1 = calculate_c1(g_r1, g_minFreq);
+
+    g_r1Npv = to_npv(g_r1).first;
+    g_r2Npv = to_npv(g_r2).first;
+    g_c1Npv = to_npv(g_c1).first;
+
     std::cout << g_c1;
     std::list<std::string> items;
     if(g_isSingleSupply) {
@@ -195,9 +209,108 @@ void ia_calculations_main_menu() {
     user_cont();
     ia_more_data();
 }
-
+//Function to give options for displaying more data
 void ia_more_data() {
+    std::list<std::string> items = {"1. View detailed calculations", "2. Save component values to .txt", "3. Generate Falstad circuit", "4. Generate example wave graph", "5. Compare Op-Amp suitability", "6. Move on"};
+    print_menu("More Data", "Choose an option to display more data:", items);
+    int input = user_input(6);
 
+    switch(input) {
+        case 1: ia_detailed_calculations();
+            break;
+        case 2: ia_save_to_text();
+            break;
+        case 3: ia_generate_circuit();
+            break;
+        case 4: ia_generate_wave();
+            break;
+        case 5: ia_compare_opamp();
+            break;
+        default: ia_move_on();
+            break;
+    }
+}
+
+void ia_detailed_calculations() {
+
+}
+
+void ia_save_to_text() {
+    
+}
+
+void ia_generate_circuit() {
+    std::ofstream file;
+
+    std::list<std::string> items = {};
+    print_menu("Generate Falstad Circuit", "Enter the filepath to create the file:", items);
+    while(1){
+        std::cout<< "ENTER PATH:";
+        std::string path;
+        std::cin >> path;
+        file.open(path + "/Falstad Circuit.txt");
+
+        if(file.is_open()) {
+            break;
+        }
+        else {
+            std::cout << "COULD NOT OPEN LOCATION";
+        }
+    }
+
+    if(g_isSingleSupply){
+        file << "$ 1 0.000005 10.20027730826997 50 5 43 5e-11\n";
+        file << "a 240 208 384 208 8 " << std::fixed << std::setprecision(24) << g_supplyVoltage << " " << 0 << " 1000000 0 0 100000\n";
+        file << "r 240 128 384 128 0 " << g_r2Npv << "\n";          //R2
+        file << "r 160 192 240 192 0 " << g_r1Npv << "\n";          //R1
+        file << "w 240 128 240 192 0\n";
+        file << "w 384 128 384 208 0\n";
+        file << "c 96 192 160 192 0 " << g_c1Npv << " 0 0.001\n";   //C1
+        file << "207 448 208 480 208 4 VOUT\n";
+        file << "c 384 208 448 208 320 0 " << g_c1Npv << " 0 0.001\n";  //C2
+        file << "r 208 240 208 320 0 100000\n";                     //RA
+        file << "r 208 320 208 400 0 100000\n";                     //RB
+        file << "w 240 320 208 320 0\n";
+        file << "207 208 240 176 240 4 +VS\n";
+        file << "g 208 400 208 416 0 0\n";
+        file << "w 240 224 240 320 0";
+    }
+    else {
+        file << "$ 1 0.000005 10.20027730826997 50 5 43 5e-11\n";
+        file << "a 240 208 384 208 8 " << g_supplyVoltage << " " << -g_supplyVoltage << " 1000000 0 0 100000\n";
+        file << "r 240 128 384 128 0 " << std::fixed << std::setprecision(24) << g_r2Npv << "\n";          //R2
+        file << "r 160 192 240 192 0 " << g_r1Npv << "\n";          //R1
+        file << "w 240 128 240 192 0\n";
+        file << "w 384 128 384 208 0\n";
+        file << "c 96 192 160 192 0 " << g_c1Npv << " 0 0.001\n";   //C1
+        file << "w 384 208 448 208 0\n";
+        file << "207 448 208 480 208 4 VOUT\n";
+        file << "w 240 224 240 272 0\n";
+        file << "g 240 272 240 304 0 0\n";
+        file << "207 96 192 48 192 4 VIN";
+    }
+    file.close();
+}
+
+void ia_generate_wave() {
+
+}
+
+void ia_compare_opamp() {
+
+}
+
+void ia_move_on() {
+    std::list<std::string> items = {"1. Yes", "2. No"};
+    print_menu("Exit Screen", "Do you wish to calculate different values?", items);
+    int input = user_input(2);
+
+    switch (input) {
+        case 1: ia_main_menu();
+            break;
+        case 2: //Go to calculator main menu
+            break;
+    }
 }
 
 //Function to calculate the value of R2
@@ -254,12 +367,12 @@ std::pair<float, std::string> to_npv(float val) {
     int remainder = abs(divisions) % 3;
 
     if(divisions > 0) {
+        rawVal = npv * pow(10, abs(divisions));
         npv *= pow(10, remainder);
-        rawVal = npv * pow(10, divisions);
     }
     else {
+        rawVal = npv / pow(10, abs(divisions));
         npv /= pow(10, remainder);
-        rawVal = npv / pow(10, divisions);
     }
 
     prefix = siPrefixes[subDiv];
