@@ -16,6 +16,8 @@
 //Global variable declarations
 enum Position{LEFT, CENTRE, RIGHT};             //lastchance, 25/06/2019, http://www.cplusplus.com/forum/general/256212/#msg1121565
 
+std::list<std::string> emptyList = {};
+
 float g_gain;
 float g_r1;
 float g_r1Npv;
@@ -58,6 +60,8 @@ float calculate_r2(float gain, float rIn);
 float calculate_c1(float r1, float fMin);
 
 std::pair<float, std::string> to_npv(float val);
+
+void generate_wave_file(float gain, float vSupply, bool isSingleSupply, float amp, std::string filePath, std::string outPath);
 
 
 
@@ -199,15 +203,13 @@ void ia_supply_voltage_menu() {
 }
 //Function to handle getting gain data
 void ia_gain_menu() {
-    std::list<std::string> items = {};
-    print_menu("3. Gain", "Enter how much gain you would like", items);
+    print_menu("3. Gain", "Enter how much gain you would like", emptyList);
     g_gain = user_input(-1);
     ia_input_z_menu();
 }
 //Function to handle getting input impedance data
 void ia_input_z_menu() {
-    std::list<std::string> items = {};
-    print_menu("4. Input Impedance", "Enter the input impedance of your circuit", items);
+    print_menu("4. Input Impedance", "Enter the input impedance of your circuit", emptyList);
     g_r1 = user_input(-1);
     ia_freq_menu();
 }
@@ -290,8 +292,7 @@ void ia_detailed_calculations() {
 void ia_save_to_text() {
     std::ofstream file;
 
-    std::list<std::string> items = {};
-    print_menu("Save Calculations to Text File", "Enter the filepath to create the file:", items);
+    print_menu("Save Calculations to Text File", "Enter the filepath to create the file:", emptyList);
     while(1){
         std::cout<< "ENTER PATH:";
         std::string path;
@@ -341,8 +342,7 @@ void ia_save_to_text() {
 void ia_generate_circuit() {
     std::ofstream file;
 
-    std::list<std::string> items = {};
-    print_menu("Generate Falstad Circuit", "Enter the filepath to create the file:", items);
+    print_menu("Generate Falstad Circuit", "Enter the filepath to create the file:", emptyList);
     while(1){
         std::cout<< "ENTER PATH:";
         std::string path;
@@ -393,13 +393,58 @@ void ia_generate_circuit() {
 }
 //Function that takes an input .csv file and simulates the wave going through the amplifier
 void ia_generate_wave() {
+    std::string filePath;
+    float amp;
+    std::list<std::string> items = {"1. Use preset wave-shape", "2. Load from user specified file"};
+    print_menu("Generate a Signal Graph", "Select the source of the input signal:", items);
+    int input = user_input(2);
+    
+    if(input == 2) {
+        print_menu("Load Custom Input Wave", "Enter the filepath of your custom wave:", emptyList);
+        std::cout << "ENTER PATH:";
+        std::cin >> filePath;
+        amp = 1;
+    }
+    else {
+        std::list<std::string> waveShapes = {"1. Sine", "2. Square", "3. Triangle", "4. Ramp Up", "5. Ramp Down"};
+        print_menu("Select a Wave-Shape", "Select from the predefined waves:", waveShapes);
+        int input = user_input(5);
+        
+        if(input == 1) {
+            filePath = ".\\Resources\\SINE_WAVE.csv";
+        }
+        else if(input == 2) {
+            filePath = ".\\Resources\\SQUARE_WAVE.csv";
+        }
+        else if(input == 3) {
+            filePath = ".\\Resources\\TRIANGLE_WAVE.csv";
+        }
+        else if(input == 4) {
+            filePath = ".\\Resources\\RAMP_UP_WAVE.csv";
+        }
+        else {
+            filePath = ".\\Resources\\RAMP_DN_WAVE.csv";
+        }
+        std::cout << filePath << std::endl;
+        print_menu("Wave Amplitude", "Enter the peak amplitude of the wave, in V:", emptyList);
+        std::cout << "ENTER VALUE:";
+        std::cin >> amp;
+    }
 
+    print_menu("Save Location", "Enter the path of the output file:", emptyList);
+    std::cout << "ENTER PATH:";
+    std::string outPath;
+    std::cin >> outPath;
+
+    generate_wave_file(g_gain, g_supplyVoltage, g_isSingleSupply, amp, filePath, outPath);
+
+    ia_more_data();
 }
 
 void ia_compare_opamp() {
 
 }
-
+//Function that handles going back to the main menu or calculating a new op-amp
 void ia_move_on() {
     std::list<std::string> items = {"1. Yes", "2. No"};
     print_menu("Exit Screen", "Do you wish to calculate different values?", items);
@@ -480,4 +525,92 @@ std::pair<float, std::string> to_npv(float val) {
     std::string outString = std::to_string(npv) + prefix;
     
     return std::make_pair(rawVal, outString);
+}
+
+void generate_wave_file(float gain, float vSupply, bool isSingleSupply, float amp, std::string filePath, std::string outPath) {
+    //Opening file
+    std::ifstream file;
+
+    file.open(filePath);
+    if(!file.is_open()){
+        std::cerr << "ERROR: No input file found\n";
+        exit(1);    
+    }
+
+    //Counting lines
+    int n = 0;
+    std::string temp;
+    while(getline(file, temp)) {
+        n++;
+    }
+
+    //Reset file position
+    file.clear();
+    file.seekg(0); //https://stackoverflow.com/questions/5343173/returning-to-beginning-of-file-after-getline
+
+    //Reading to list
+    std::list<std::vector<double>> readList;
+
+    for (int i = 0; i < n; i++) {
+        std::vector<double> tempV;
+        double tempD;
+        getline(file, temp, ',');
+        tempD = std::stod(temp);
+        tempV.push_back(tempD);
+        getline(file, temp);
+        tempD = std::stod(temp);
+        tempD *= amp;
+        tempV.push_back(tempD);
+        readList.push_back(tempV);
+    }
+    file.close();
+
+    //Writing to list
+    std::list<std::vector<double>> outList;
+
+
+    for(std::vector<double> v : readList) {
+        std::vector<double> tempV;
+
+        double iAmp = v[1];
+        double ampVal = iAmp * -gain;
+        if(isSingleSupply){
+            if(ampVal > (vSupply / 2)) {
+                ampVal = vSupply / 2;
+            }
+            else if(ampVal < -(vSupply / 2 )) {
+                ampVal = -(vSupply / 2);
+            }
+        }
+        else{
+            if(ampVal > vSupply) {
+                ampVal = vSupply;
+            }
+            else if (ampVal < -vSupply) {
+                ampVal = -vSupply;
+            }
+        }
+        
+        tempV.push_back(v[0]);
+        tempV.push_back(v[1]);
+        tempV.push_back(ampVal);
+        outList.push_back(tempV);
+    }
+
+    //Writing to output file
+    std::ofstream outFile;
+
+    outFile.open(outPath + "\\Generated Wave.csv");
+
+    if(!outFile.is_open()){
+        std::cerr << "ERROR CREATING FILE\n";
+        exit(1);
+    }
+
+    outFile << "Time,Input,Output\n";
+
+    for(std::vector<double> v : outList) {
+        outFile << v[0] << "," << v[1] << "," << v[2] << std::endl;
+    }
+    outFile.close();
 }
