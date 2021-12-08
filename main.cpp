@@ -287,6 +287,9 @@ void ia_detailed_calculations() {
     bodyList.push_back(bodyText3);
 
     print_page("Detailed Calculations 2/2", bodyList);
+
+    user_cont();
+    ia_more_data();
 }
 //Function to save component values to a text file
 void ia_save_to_text() {
@@ -406,9 +409,9 @@ void ia_generate_wave() {
         amp = 1;
     }
     else {
-        std::list<std::string> waveShapes = {"1. Sine", "2. Square", "3. Triangle", "4. Ramp Up", "5. Ramp Down"};
+        std::list<std::string> waveShapes = {"1. Sine", "2. Square"};
         print_menu("Select a Wave-Shape", "Select from the predefined waves:", waveShapes);
-        int input = user_input(5);
+        int input = user_input(2);
         
         if(input == 1) {
             filePath = ".\\Resources\\SINE_WAVE.csv";
@@ -417,13 +420,13 @@ void ia_generate_wave() {
             filePath = ".\\Resources\\SQUARE_WAVE.csv";
         }
         else if(input == 3) {
-            filePath = ".\\Resources\\TRIANGLE_WAVE.csv";
+//            filePath = ".\\Resources\\TRIANGLE_WAVE.csv";
         }
         else if(input == 4) {
-            filePath = ".\\Resources\\RAMP_UP_WAVE.csv";
+//            filePath = ".\\Resources\\RAMP_UP_WAVE.csv";
         }
         else {
-            filePath = ".\\Resources\\RAMP_DN_WAVE.csv";
+//            filePath = ".\\Resources\\RAMP_DN_WAVE.csv";
         }
         std::cout << filePath << std::endl;
         print_menu("Wave Amplitude", "Enter the peak amplitude of the wave, in V:", emptyList);
