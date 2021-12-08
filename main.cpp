@@ -32,9 +32,11 @@ std::map<float, std::string> siPrefixes{{-8, "y"}, {-7, "z"}, {-6, "a"}, {-5, "f
 
 //Function declarations
 void print_menu(std::string title, std::string body, std::list<std::string> items);
+void print_page(std::string title, std::list<std::string> body);
 int user_input(int range);
 void user_cont();
 void print(Position pos, std::string s);
+std::list<std::string> string_to_list(const std::string& str);
 
 //Function declarations for each menu screen
 void ia_main_menu();
@@ -90,10 +92,39 @@ void print_menu(std::string title, std::string body, std::list<std::string> item
         print(CENTRE, item);                                                      //Prints menu item on new line
     }
 
-    int remainingLines = (SCREENHEIGHT - 7) - items.size();                        // Calculates how many lines are remaining on the screen
-    std::cout << std::string(remainingLines, '\n');                                //Prints a new line for each remaining line
-
+    int remainingLines = (SCREENHEIGHT - 7) - items.size();                     // Calculates how many lines are remaining on the screen
+    if(remainingLines > 0) std::cout << std::string(remainingLines, '\n');      //Prints a new line for each remaining line                      
     std::cout << std::string(LINELENGTH, '-') << std::endl;  
+}
+
+void print_page(std::string title, std::list<std::string> body) {
+    std::cout << std::string(5, '\n');
+    std::cout << std::string(LINELENGTH, '=') << std::endl;
+    print(CENTRE, title);
+    std::cout << std::string(LINELENGTH, '-') << std::endl;
+
+    for(std::string line : body) {
+        std::cout << line << std::endl;
+    }
+
+    int remainingLines = (SCREENHEIGHT - 7) - body.size();                     // Calculates how many lines are remaining on the screen
+    if(remainingLines > 0) std::cout << std::string(remainingLines, '\n');      //Prints a new line for each remaining line                      
+    std::cout << std::string(LINELENGTH, '-') << std::endl; 
+}
+
+std::list<std::string> string_to_list(const std::string& str) {
+    int numStrings = str.length() / LINELENGTH;
+    std::list<std::string> out;
+
+    for(auto i = 0; i < numStrings; i++) {
+        out.push_back(str.substr(i * LINELENGTH, LINELENGTH));
+    }
+
+    if(str.length() % LINELENGTH != 0) {
+        out.push_back(str.substr(LINELENGTH * numStrings));
+    }
+
+    return out;
 }
 
 //Function to handle user input, takes in the range of options allows
@@ -197,7 +228,8 @@ void ia_calculations_main_menu() {
     g_r2Npv = to_npv(g_r2).first;
     g_c1Npv = to_npv(g_c1).first;
 
-    std::cout << g_c1;
+    std::cout << std::fixed << std::setprecision(3);
+
     std::list<std::string> items;
     if(g_isSingleSupply) {
         items = {"R1 : " + to_npv(g_r1).second, "R2 : " + to_npv(g_r2).second, "C1 : " + to_npv(g_c1).second, "C2 : " + to_npv(g_c1).second};
@@ -230,15 +262,82 @@ void ia_more_data() {
             break;
     }
 }
-
+//Function to view calculations in detail
 void ia_detailed_calculations() {
+    std::string bodyText1 = "The gain of the amplifier is calculated as G = R2/R1. As the gain and input impedance (R1) are fixed, we can use the product of these 2 variables to calculate R2:";
+    std::string bodyText2 = "R2 = G * R1 = " + std::to_string(g_gain) + " * " + std::to_string(g_r1);
+    std::string bodyText3 = std::to_string(g_r2) + " = " + std::to_string(g_gain) + " * " + std::to_string(g_r1);
+    std::string bodyText4 = "These calculations are using the raw values, not those rounded to the Nearest Preferable Value.";
+    std::list<std::string> bodyList = string_to_list(bodyText1);
+    bodyList.push_back(bodyText2);
+    bodyList.push_back(bodyText3);
+    bodyList.splice(bodyList.end(), string_to_list(bodyText4));
 
+    print_page("Detailed Calculations 1/2", bodyList);
+
+    user_cont();
+
+    bodyText1 = "The AC coupling capacitance is calculated as C1 = 1 / (2 * PI * fMIN * R1). This creates a high-pass network between the capacitor and the virtual ground.";
+    bodyText2 = "C1 = 1 / (2 * PI * " + std::to_string(g_minFreq) + " * " + std::to_string(g_r1) + ")";
+    bodyText3 = "C1 = " + std::to_string(g_c1);
+    bodyList = string_to_list(bodyText1);
+    bodyList.push_back(bodyText2);
+    bodyList.push_back(bodyText3);
+
+    print_page("Detailed Calculations 2/2", bodyList);
 }
-
+//Function to save component values to a text file
 void ia_save_to_text() {
-    
-}
+    std::ofstream file;
 
+    std::list<std::string> items = {};
+    print_menu("Save Calculations to Text File", "Enter the filepath to create the file:", items);
+    while(1){
+        std::cout<< "ENTER PATH:";
+        std::string path;
+        std::cin >> path;
+        file.open(path + "/Inverting Amplifier Components.txt");
+
+        if(file.is_open()) {
+            break;
+        }
+        else {
+            std::cout << "COULD NOT OPEN LOCATION\n";
+        }
+    }
+
+    if(g_isSingleSupply) {
+        file << "Single-Supply Inverting Amplifier Parameters:\n\n";
+        file << "Gain = " << std::fixed << std::setprecision(3) << g_gain << std::endl;
+        file << "Input Impedance = " << to_npv(g_r1).second << " Ohms\n";
+        file << "Supply Voltage = " << g_supplyVoltage << " V\n";
+        file << "Operating Frequency = " << g_minFreq << " Hz to " << g_maxFreq << " Hz\n\n";
+        file << "Calculated Component Values:\n\n";
+        file << "R1 = " << to_npv(g_r1).second << " Ohms\n";
+        file << "R2 = " << to_npv(g_r2).second << " Ohms\n";
+        file << "C1 = " << to_npv(g_c1).second << " F\n";
+        file << "C2 = " << to_npv(g_c1).second << " F\n";
+        file << "RA = 100k Ohms\n";
+        file << "RB = 100k Ohms\n";
+    }
+    else {
+        file << "Dual-Supply Inverting Amplifier Parameters:\n\n";
+        file << "Gain = " << std::fixed << std::setprecision(3) << g_gain << std::endl;
+        file << "Input Impedance = " << to_npv(g_r1).second << " Ohms\n";
+        file << "Supply Voltages: \n";
+        file << "\t+Vs = " << g_supplyVoltage << " V\n";
+        file << "\t-Vs = " << g_supplyVoltage << " V\n";
+        file << "Operating Frequency = " << g_minFreq << " Hz to " << g_maxFreq << " Hz\n\n";
+        file << "Calculated Component Values:\n\n";
+        file << "R1 = " << to_npv(g_r1).second << " Ohms\n";
+        file << "R2 = " << to_npv(g_r2).second << " Ohms\n";
+        file << "C1 = " << to_npv(g_c1).second << " F\n";
+    }
+
+    file.close();
+    ia_more_data();
+}
+//Function to generate a text file containing Falstad circuit code
 void ia_generate_circuit() {
     std::ofstream file;
 
@@ -254,7 +353,7 @@ void ia_generate_circuit() {
             break;
         }
         else {
-            std::cout << "COULD NOT OPEN LOCATION";
+            std::cout << "COULD NOT OPEN LOCATION\n";
         }
     }
 
@@ -290,8 +389,9 @@ void ia_generate_circuit() {
         file << "207 96 192 48 192 4 VIN";
     }
     file.close();
+    ia_more_data();
 }
-
+//Function that takes an input .csv file and simulates the wave going through the amplifier
 void ia_generate_wave() {
 
 }
@@ -378,7 +478,6 @@ std::pair<float, std::string> to_npv(float val) {
     prefix = siPrefixes[subDiv];
 
     std::string outString = std::to_string(npv) + prefix;
-    std::cout << outString;
     
     return std::make_pair(rawVal, outString);
 }
