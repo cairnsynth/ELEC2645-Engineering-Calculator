@@ -21,6 +21,8 @@ namespace iamp {
 
     void generate_wave_file(float gain, float vSupply, bool isSingleSupply, float amp, std::string filePath, std::string outPath);
 
+    std::string get_hash(float f1, float f2, float f3, float f4);
+
     //Function declarations for each menu screen
     void main_menu();
     void supply_type_menu();

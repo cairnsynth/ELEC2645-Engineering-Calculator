@@ -7,6 +7,7 @@
 #include <map>
 #include <math.h>
 #include <fstream>
+#include <unordered_map>
 
 //Include header file
 #include "inverting_amplifier.h"
@@ -144,11 +145,13 @@ namespace iamp {
     //Function to print the main menu for the inverting amplifier calculator
     void main_menu() {
 
-        std::list<std::string> items = {"Luke Coles", " ", "201331120"};            //Creating list to be displayed on page
+        std::list<std::string> items = {"Luke Coles", "201331120", " ", "Enter 1 to continue", "Enter 2 to return to menu"};            //Creating list to be displayed on page
         print_menu("Inverting Amplifier Calculator", " ", items);                   //Printing the menu
-        user_cont();                                                                //Wait for enter to be pressed
-
-        supply_type_menu();                                                      //Call the next menu function
+        int input = user_input(2);                                                               //Wait for enter to be pressed
+        
+        if(input == 1){
+            supply_type_menu();                                                      //Call the next menu function
+        }
 
     }
     //Function to handle getting supply type data
@@ -277,11 +280,11 @@ namespace iamp {
         }                                                   //Store input in path
 */
         
-        file.open(path + "/Inverting Amplifier Components.txt"); 
+        file.open(path + "/inverting_amplifier_components" + get_hash(g_gain, g_r1, g_r2, g_c1) + ".txt"); 
 
         if(!file.is_open()) { 
             std::cerr << "COULD NOT OPEN LOCATION, saving to Resources folder\n";                           //If not open print error message
-            file.open(".\\Resources\\Output\\Inverting Amplifier Components.txt");                          //Save to resources folder             
+            file.open(".\\Resources\\Output\\inverting_amplifier_components" + get_hash(g_gain, g_r1, g_r2, g_c1) + ".txt");                          //Save to resources folder             
         }
             
         
@@ -327,11 +330,11 @@ namespace iamp {
         std::cout<< "ENTER PATH:";                                              //Prompts user input
         std::string path;
         std::cin >> path;                                                       //Stores input in path
-        file.open(path + "/Falstad Circuit.txt");                               //Opens file at given location
+        file.open(path + "/falstad_circuit" + get_hash(g_gain, g_r1, g_r2, g_c1) + ".txt");                               //Opens file at given location
 
         if(!file.is_open()) {
             std::cerr << "COULD NOT OPEN LOCATION\n"; 
-            file.open(".\\Resources\\Output\\Falstad Circuit.txt");             //If file is not open, saves to resources folder
+            file.open(".\\Resources\\Output\\falstad_circuit" + get_hash(g_gain, g_r1, g_r2, g_c1) + ".txt");             //If file is not open, saves to resources folder
         }
         
 
@@ -572,13 +575,13 @@ namespace iamp {
             outList.push_back(tempV);                                               //Push temp vector onto end of output list
         }
 
-        std::ofstream outFile;                                                      //Create stream object for writing the file
-
-        outFile.open(outPath + "\\Generated Wave.csv");                             //Open file at given output path
+        std::ofstream outFile;                                                    //Create stream object for writing the file
+        std::string fileName = "generated_wave" + get_hash(g_gain, g_r1, g_r2, g_c1) + ".csv"; //Create the file name, using hash of component values
+        outFile.open(outPath + "\\" + fileName);                             //Open file at given output path
 
         if(!outFile.is_open()){
             std::cerr << "ERROR CREATING FILE, saving to resources\n";              //Prints error and exits if file cannot be opened
-            outFile.open(".\\Resources\\Output\\Generated Wave.csv");               //Saves to resources folder
+            outFile.open(".\\Resources\\Output\\" + fileName);               //Saves to resources folder
         }
 
         outFile << "Time,Input,Output\n";                                           //Write column headings to output file
@@ -587,5 +590,19 @@ namespace iamp {
             outFile << v[0] << "," << v[1] << "," << v[2] << std::endl;             //Write all 3 values, separated by commas, then new line
         }
         outFile.close();                                                            //Close the output file
-    }  
+    } 
+
+    //Function to get a hash of the component values, used for giving unique file names, Seth Carnegie, 06/11/2011, https://stackoverflow.com/questions/8029121/how-to-hash-stdstring
+    std::string get_hash(float f1, float f2, float f3, float f4) {
+        std::hash<std::string> hasher;                              //Create hash object
+        std::string s = std::to_string(f1) + std::to_string(f2) + std::to_string(f3) + std::to_string(f4);      //Combine component values into 1 string
+
+        size_t hash = hasher(s);                    //hash the string, store in hash
+
+        std::string ret = std::to_string(hash);     //convert hash to string
+
+        return ret;
+    }
+
+    
 } 
