@@ -21,7 +21,7 @@ Planned features include:
 - Comparison of different Op-Amps and their suitablilty in the designed circuit
 - Simulations of the circuit using specific Op-Amps, to show gain characteristics and saturation levels of each IC
 
-*Author: Luke Coles, *
+*Author: Luke Coles*
 
 *mc20ldc@leeds.ac.uk / 12luke04@gmail.com*
 
