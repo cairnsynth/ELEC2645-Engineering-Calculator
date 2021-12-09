@@ -426,7 +426,7 @@ void move_on() {
     switch (input) {
         case 1: main_menu();                                                 //If input is 1, go to the main menu of the op-amp calculator
             break;
-        case 2: //Go to calculator main menu
+        case 2:                                                             //If input is 2, go to calculator main menu
             break;
     }
 }
