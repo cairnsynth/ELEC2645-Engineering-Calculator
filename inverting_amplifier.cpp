@@ -384,9 +384,9 @@ namespace iamp {
             amp = 1;
         }
         else {                                                                      //If input is 1, display options for predefined waveshapes
-            std::list<std::string> waveShapes = {"1. Sine", "2. Square"};   
+            std::list<std::string> waveShapes = {"1. Sine", "2. Square", "3. Triangle", "4. Ramp Up", "5. Ramp Down"};   
             print_menu("Select a Wave-Shape", "Select from the predefined waves:", waveShapes);
-            int input = user_input(2);
+            int input = user_input(5);
             
             if(input == 1) {
                 filePath = ".\\Resources\\Waveshapes\\SINE_WAVE.csv";                           //If sine wave is selected, set path to SINE_WAVE.csv
@@ -395,13 +395,13 @@ namespace iamp {
                 filePath = ".\\Resources\\Waveshapes\\SQUARE_WAVE.csv";                         //If square wave is selected, set path to SQUARE_WAVE.csv
             }
             else if(input == 3) {
-    //            filePath = ".\\Resources\\Waveshapes\\TRIANGLE_WAVE.csv";
+                filePath = ".\\Resources\\Waveshapes\\TRIANGLE_WAVE.csv";
             }
             else if(input == 4) {
-    //            filePath = ".\\Resources\\Waveshapes\\RAMP_UP_WAVE.csv";
+                filePath = ".\\Resources\\Waveshapes\\RAMP_UP_WAVE.csv";
             }
             else {
-    //            filePath = ".\\Resources\\Waveshapes\\RAMP_DN_WAVE.csv";
+                filePath = ".\\Resources\\Waveshapes\\RAMP_DN_WAVE.csv";
             }                                   
             print_menu("Wave Amplitude", "Enter the peak amplitude of the wave, in V:", emptyList);     //Print menu for amplitude
             std::cout << "ENTER VALUE:";                            
