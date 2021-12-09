@@ -420,10 +420,11 @@ namespace iamp {
     //Function to compare different op amps suitability for the amplifier
     void compare_opamp() {
         print_menu("Op-Amp Comparison", "This feature is not yet implemented", emptyList);      //Did not have time to implement this
+        more_data();
     }
     //Function that handles going back to the main menu or calculating a new op-amp
     void move_on() {
-        std::list<std::string> items = {"1. Yes", "2. No"};                         //Menu items
+        std::list<std::string> items = {"1. Yes", "2. No, return to main menu"};                         //Menu items
         print_menu("Exit Screen", "Do you wish to calculate different values?", items);     //Print menu
         int input = user_input(2);                                                  //Get input, range 1-2
 
