@@ -1,3 +1,5 @@
+#ifndef INVERTING_AMPLIFIER_H
+#define INVERTING_AMPLIFIER_H
 //Required libraries for function declarations
 #include <list>
 #include <vector>
@@ -35,3 +37,5 @@ namespace iamp {
     void compare_opamp();
     void move_on();
 }
+
+#endif //INVERTING_AMPLIFIER_H
