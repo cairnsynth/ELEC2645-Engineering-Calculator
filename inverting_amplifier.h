@@ -1,3 +1,11 @@
+/*
+===============================================================================================================
+inverting_amplifier.h v1.0.0
+Author: Luke Coles
+mc20ldc@leeds.ac.uk
+===============================================================================================================
+*/
+
 #ifndef INVERTING_AMPLIFIER_H
 #define INVERTING_AMPLIFIER_H
 //Required libraries for function declarations
