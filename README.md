@@ -24,7 +24,6 @@ Planned features include:
 
 *Author: Luke Coles*
 
-*mc20ldc@leeds.ac.uk / 12luke04@gmail.com*
 
 *https://github.com/luke1241*
 
@@ -35,7 +34,6 @@ Planned features include:
 
 *Author: Edward Muzio*
 
-*mc20elm@leeds.ac.uk*
 
  ### Resistor Colour Code Calculator
  
@@ -44,5 +42,3 @@ The tool I planned working on was a resistor color-code calculator that would be
 
 
  *Author: Faisal Sajwani*
-
- *el20fahs@leeds.ac.uk*
